@@ -4,6 +4,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { it } = require('node:test');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -64,4 +65,39 @@ app.post('/login', (req, res) => {
             res.json({ success: false, message: 'E-mail ou senha incorretos.' });
         }
     });
+
+});
+
+app.post('/checkout' , (req, res) =>{
+    const {usuario_Id ,cart , total} = req.body;
+    if (!usuario_Id) return res.status{401}json({messge:'usuario não está logado'});
+    
+    const sqlPedido = 'INSERT INTO pedidos (usuarios_id, total) VALUES (?,?)';
+    db.query(sqlPedido, [usuario_id,total, total], (err,result)=>{
+        if(err) return res.status(500).json({message:'Erro ao processar o pedido'});
+        const pedidoID = result.insertId;
+        const ItensValues = cart.map(item => [pedidoID, item.title, item.price, item.qty]);
+        const sqlItens = 'INSERT INTO itens_pedido (pedido_id , produto_nome , preco_unitario , quantitdade) VALUES?';
+        db.query(sqlItens, [ItensValues] , (errItens) =>{
+            if(errItens) return res.status(500).json({message:'Erro ao adicionar Itens ao pedido'});
+            res.json({message:'Pedido realizado com sucesso', success:true , pedidoId:pedidoID});
+
+
+        });
+    });
+});
+
+app.get('/meus-pedidos/userId', (req,res) => {
+    const userId = req.params.userId;
+    const sql = 'SELECT id, valor_total, status , data_pedido FROM pedidos WHERE usuario_Id = ? ORDER BY Id Desc';
+    db.query(sql, [userId],(err , results =>{
+if(err) return res.status(500).json({message:'Erro ao buscar pedidos'});
+res.json(results);
+
+    }));
+});
+
+app.listen(3000 , () =>{
+    console.log('Servidor rodando na porta 3000 . Acesse em http://localhost:3000');
+
 });
